@@ -11,6 +11,7 @@
     "test": "cypress open --component"
   },
   "dependencies": {
+    "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.5.3"
@@ -20,6 +21,7 @@
     "@cypress/react18": "^2.0.1",
     "@cypress/vite-dev-server": "^6.0.3",
     "@eslint/js": "^9.25.0",
+    "@types/jwt-decode": "^2.2.1",
     "@types/react": "^18.3.21",
     "@types/react-dom": "^18.3.7",
     "@types/react-router-dom": "^5.3.3",
