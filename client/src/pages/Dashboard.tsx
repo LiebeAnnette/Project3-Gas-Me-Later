@@ -4,6 +4,7 @@ import TripForm from "../components/TripForm";
 import TripList from "../components/TripList";
 import type { TripProps } from "../types/Trip";
 import { getUserFromToken } from "../utils/auth";
+import { useEffect } from "react";
 
 const Dashboard: React.FC = () => {
   const [trips, setTrips] = useState<TripProps[]>([]);
@@ -15,9 +16,51 @@ const Dashboard: React.FC = () => {
     navigate("/");
   };
 
-  const addTrip = (newTrip: TripProps) => {
-    setTrips((prevTrips) => [...prevTrips, newTrip]);
+  const addTrip = async (newTrip: TripProps) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/trips", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newTrip),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save trip");
+      }
+
+      const savedTrip = await response.json();
+      setTrips((prev) => [...prev, savedTrip]);
+    } catch (err) {
+      console.error(err);
+    }
   };
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("/api/trips", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load trips");
+        }
+
+        const data = await response.json();
+        setTrips(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchTrips();
+  }, []);
 
   return (
     <div style={{ padding: "2rem" }}>
