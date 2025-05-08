@@ -1,31 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TripForm from "../components/TripForm";
 import TripList from "../components/TripList";
 import type { TripProps } from "../types/Trip";
 import { getUserFromToken } from "../utils/auth";
-import { useEffect } from "react";
 import { getChuckFact } from "../utils/getChuckFact";
-import chuckImage from "../assets/Chungkingosaurus.jpg"; // adjust path as needed
+import { getMileage } from "../utils/getMileage";
+import chuckImage from "../assets/Chungkingosaurus.jpg";
 
 const Dashboard: React.FC = () => {
   const [trips, setTrips] = useState<TripProps[]>([]);
+  const [chuckFact, setChuckFact] = useState<string | null>(null);
+  const [totalMiles, setTotalMiles] = useState<number | null>(null);
   const user = getUserFromToken();
   const navigate = useNavigate();
-  const [chuckFact, setChuckFact] = useState<string | null>(null);
 
+  // Fetch Chuck Norris fact
   useEffect(() => {
     const loadFact = async () => {
       const fact = await getChuckFact();
       setChuckFact(fact);
     };
-
     loadFact();
+  }, []);
+
+  // Fetch trips and mileage
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const [tripRes, miles] = await Promise.all([
+          fetch("/api/trips", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          getMileage(token),
+        ]);
+
+        if (!tripRes.ok) throw new Error("Failed to load trips");
+
+        const tripData = await tripRes.json();
+        setTrips(tripData);
+        setTotalMiles(miles);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/");
+  };
+
+  const refreshMileage = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const miles = await getMileage(token);
+      setTotalMiles(miles);
+    }
   };
 
   const addTrip = async (newTrip: TripProps) => {
@@ -40,39 +76,16 @@ const Dashboard: React.FC = () => {
         body: JSON.stringify(newTrip),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to save trip");
-      }
+      if (!response.ok) throw new Error("Failed to save trip");
 
       const savedTrip = await response.json();
       setTrips((prev) => [...prev, savedTrip]);
+      refreshMileage();
     } catch (err) {
       console.error(err);
     }
   };
-  useEffect(() => {
-    const fetchTrips = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("/api/trips", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
 
-        if (!response.ok) {
-          throw new Error("Failed to load trips");
-        }
-
-        const data = await response.json();
-        setTrips(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchTrips();
-  }, []);
   const deleteTrip = async (id: string) => {
     try {
       const token = localStorage.getItem("token");
@@ -83,11 +96,10 @@ const Dashboard: React.FC = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete trip");
-      }
+      if (!response.ok) throw new Error("Failed to delete trip");
 
       setTrips((prev) => prev.filter((trip) => trip._id !== id));
+      refreshMileage();
     } catch (err) {
       console.error(err);
     }
@@ -138,6 +150,12 @@ const Dashboard: React.FC = () => {
           <p>Welcome back, {user.username}!</p>
           <button onClick={handleLogout}>Log out</button>
         </>
+      )}
+
+      {totalMiles !== null && (
+        <div style={{ margin: "1rem 0", fontWeight: "bold" }}>
+          Total Miles Logged: {totalMiles}
+        </div>
       )}
 
       <TripForm onSubmit={addTrip} />
