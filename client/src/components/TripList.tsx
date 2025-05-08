@@ -1,20 +1,21 @@
 import React from "react";
 import TripCard from "./TripCard";
-import type { TripProps } from "./TripCard";
+import type { TripProps } from "../types/Trip";
 
 type TripListProps = {
   trips: TripProps[];
+  onDelete?: (id: string) => void;
 };
 
-const TripList: React.FC<TripListProps> = ({ trips }) => {
+const TripList: React.FC<TripListProps> = ({ trips, onDelete }) => {
   if (trips.length === 0) {
     return <p>No trips logged yet.</p>;
   }
 
   return (
     <div>
-      {trips.map((trip, index) => (
-        <TripCard key={index} trip={trip} />
+      {trips.map((trip) => (
+        <TripCard key={trip._id} trip={trip} onDelete={onDelete} />
       ))}
     </div>
   );

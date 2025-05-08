@@ -1,13 +1,10 @@
 import React from "react";
+import type { TripProps } from "../types/Trip";
 
-export type TripProps = {
-  startLocation: string;
-  endLocation: string;
-  miles: number;
-  date: string; // ISO string
-};
-
-const TripCard: React.FC<{ trip: TripProps }> = ({ trip }) => {
+const TripCard: React.FC<{
+  trip: TripProps;
+  onDelete?: (id: string) => void;
+}> = ({ trip, onDelete }) => {
   const formattedDate = new Date(trip.date).toLocaleDateString();
 
   return (
@@ -28,6 +25,9 @@ const TripCard: React.FC<{ trip: TripProps }> = ({ trip }) => {
       <p>
         <strong>Date:</strong> {formattedDate}
       </p>
+      {onDelete && trip._id && (
+        <button onClick={() => onDelete(trip._id)}>Delete</button>
+      )}
     </div>
   );
 };

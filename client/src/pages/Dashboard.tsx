@@ -61,6 +61,25 @@ const Dashboard: React.FC = () => {
 
     fetchTrips();
   }, []);
+  const deleteTrip = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/trips/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete trip");
+      }
+
+      setTrips((prev) => prev.filter((trip) => trip._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -74,7 +93,7 @@ const Dashboard: React.FC = () => {
 
       <TripForm onSubmit={addTrip} />
       <hr style={{ margin: "2rem 0" }} />
-      <TripList trips={trips} />
+      <TripList trips={trips} onDelete={deleteTrip} />
     </div>
   );
 };

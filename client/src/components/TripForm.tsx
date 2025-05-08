@@ -1,4 +1,6 @@
-import React, { useState, FormEvent } from "react";
+import React, { useState } from "react";
+import type { FormEvent } from "react";
+import { getMiles } from "../utils/getMiles";
 
 type TripFormProps = {
   onSubmit: (trip: {
@@ -10,56 +12,92 @@ type TripFormProps = {
 };
 
 const TripForm: React.FC<TripFormProps> = ({ onSubmit }) => {
-  const [startLocation, setStartLocation] = useState("");
-  const [endLocation, setEndLocation] = useState("");
-  const [miles, setMiles] = useState("");
+  const [startAddress, setStartAddress] = useState("");
+  const [startCity, setStartCity] = useState("");
+  const [startState, setStartState] = useState("");
+  const [endAddress, setEndAddress] = useState("");
+  const [endCity, setEndCity] = useState("");
+  const [endState, setEndState] = useState("");
   const [date, setDate] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    const fullStart = `${startAddress}, ${startCity}, ${startState}`;
+    const fullEnd = `${endAddress}, ${endCity}, ${endState}`;
+
+    const calculatedMiles = await getMiles(fullStart, fullEnd);
+
+    if (calculatedMiles === null) {
+      alert("Could not calculate miles. Check addresses.");
+      return;
+    }
+
     onSubmit({
-      startLocation,
-      endLocation,
-      miles: parseFloat(miles),
+      startLocation: fullStart,
+      endLocation: fullEnd,
+      miles: calculatedMiles,
       date,
     });
 
-    // Reset the form
-    setStartLocation("");
-    setEndLocation("");
-    setMiles("");
+    // Reset form
+    setStartAddress("");
+    setStartCity("");
+    setStartState("");
+    setEndAddress("");
+    setEndCity("");
+    setEndState("");
     setDate("");
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <label>
-        Start Location:
-        <input
-          value={startLocation}
-          onChange={(e) => setStartLocation(e.target.value)}
-          placeholder="e.g., Kansas City"
-        />
-      </label>
+      <fieldset>
+        <legend>Start Location</legend>
+        <label>
+          Address:
+          <input
+            value={startAddress}
+            onChange={(e) => setStartAddress(e.target.value)}
+          />
+        </label>
+        <label>
+          City:
+          <input
+            value={startCity}
+            onChange={(e) => setStartCity(e.target.value)}
+          />
+        </label>
+        <label>
+          State:
+          <input
+            value={startState}
+            onChange={(e) => setStartState(e.target.value)}
+          />
+        </label>
+      </fieldset>
 
-      <label>
-        End Location:
-        <input
-          value={endLocation}
-          onChange={(e) => setEndLocation(e.target.value)}
-          placeholder="e.g., Hot Springs"
-        />
-      </label>
-
-      <label>
-        Miles:
-        <input
-          type="number"
-          value={miles}
-          onChange={(e) => setMiles(e.target.value)}
-        />
-      </label>
+      <fieldset>
+        <legend>End Location</legend>
+        <label>
+          Address:
+          <input
+            value={endAddress}
+            onChange={(e) => setEndAddress(e.target.value)}
+          />
+        </label>
+        <label>
+          City:
+          <input value={endCity} onChange={(e) => setEndCity(e.target.value)} />
+        </label>
+        <label>
+          State:
+          <input
+            value={endState}
+            onChange={(e) => setEndState(e.target.value)}
+          />
+        </label>
+      </fieldset>
 
       <label>
         Date:

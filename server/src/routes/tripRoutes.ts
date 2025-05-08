@@ -27,4 +27,23 @@ router.post("/", authenticateToken, async (req: Request, res: Response) => {
   res.status(201).json(newTrip);
 });
 
+// DELETE /api/trips/:id
+router.delete(
+  "/:id",
+  authenticateToken,
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.userId;
+    const { id } = req.params;
+
+    const trip = await Trip.findOneAndDelete({ _id: id, userId });
+
+    if (!trip) {
+      res.status(404).json({ error: "Trip not found" });
+      return; // ✅ Clean exit
+    }
+
+    res.json({ message: "Trip deleted" }); // ✅ Just respond, don't return
+  }
+);
+
 export default router;
