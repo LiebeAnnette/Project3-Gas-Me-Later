@@ -6,6 +6,8 @@ import tripRoutes from "./routes/tripRoutes";
 import authRoutes from "./routes/authRoutes";
 import statsRoutes from "./routes/statsRoutes";
 import reportRoutes from "./routes/reportRoutes";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -39,3 +41,15 @@ mongoose
   .catch((err) => {
     console.error("MongoDB connection error:", err);
   });
+
+if (process.env.NODE_ENV === "production") {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const clientBuildPath = path.join(__dirname, "..", "..", "client", "dist");
+
+  app.use(express.static(clientBuildPath));
+
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(clientBuildPath, "index.html"));
+  });
+}
