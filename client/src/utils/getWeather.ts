@@ -1,5 +1,12 @@
 const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
+/**
+ * Gets the weather at a specific location
+ * @param lat lattitude of location
+ * @param lon longitude of location
+ * @param tripDate date of trip
+ * @returns object of weather data
+ */
 export async function getWeather(lat: number, lon: number, tripDate: string) {
   try {
     const res = await fetch(

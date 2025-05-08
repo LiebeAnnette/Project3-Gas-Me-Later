@@ -1,10 +1,10 @@
 import { Router, Response } from "express";
-import Trip from "../models/Trip";
+import Trip from "../models/Trip.js";
 import authenticateToken, {
   AuthenticatedRequest,
-} from "../middleware/authMiddleware";
+} from "../middleware/authMiddleware.js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import type { ITrip } from "../models/Trip";
+import type { ITrip } from "../models/Trip.js";
 
 const router = Router();
 

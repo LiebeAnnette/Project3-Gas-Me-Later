@@ -1,8 +1,8 @@
 import { Router, Request, Response } from "express";
-import Trip from "../models/Trip";
+import Trip from "../models/Trip.js";
 import authenticateToken, {
   AuthenticatedRequest,
-} from "../middleware/authMiddleware";
+} from "../middleware/authMiddleware.js";
 
 const router = Router();
 

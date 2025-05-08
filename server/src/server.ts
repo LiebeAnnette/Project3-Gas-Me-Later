@@ -2,10 +2,10 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
-import tripRoutes from "./routes/tripRoutes";
-import authRoutes from "./routes/authRoutes";
-import statsRoutes from "./routes/statsRoutes";
-import reportRoutes from "./routes/reportRoutes";
+import tripRoutes from "./routes/tripRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import statsRoutes from "./routes/statsRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
