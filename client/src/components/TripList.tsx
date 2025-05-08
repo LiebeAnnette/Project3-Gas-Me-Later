@@ -1,9 +1,9 @@
 import React from "react";
 import TripCard from "./TripCard";
-import type { TripProps } from "../types/Trip";
+import type { SavedTrip } from "../types/Trip";
 
 type TripListProps = {
-  trips: TripProps[];
+  trips: SavedTrip[];
   onDelete?: (id: string) => void;
 };
 

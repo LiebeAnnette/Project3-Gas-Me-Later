@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TripForm from "../components/TripForm";
 import TripList from "../components/TripList";
-import type { TripProps } from "../types/Trip";
+import type { SavedTrip, NewTrip } from "../types/Trip";
 import { getUserFromToken } from "../utils/auth";
 import { getChuckFact } from "../utils/getChuckFact";
 import { getMileage } from "../utils/getMileage";
 import chuckImage from "../assets/Chungkingosaurus.jpg";
 
 const Dashboard: React.FC = () => {
-  const [trips, setTrips] = useState<TripProps[]>([]);
+  const [trips, setTrips] = useState<SavedTrip[]>([]);
   const [chuckFact, setChuckFact] = useState<string | null>(null);
   const [totalMiles, setTotalMiles] = useState<number | null>(null);
   const user = getUserFromToken();
@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const addTrip = async (newTrip: TripProps) => {
+  const addTrip = async (newTrip: NewTrip) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("/api/trips", {

@@ -1,4 +1,4 @@
-export type TripProps = {
+export type NewTrip = {
   startLocation: string;
   endLocation: string;
   miles: number;
@@ -8,5 +8,8 @@ export type TripProps = {
     description: string;
   };
   userId?: string;
-  _id?: string;
+};
+
+export type SavedTrip = NewTrip & {
+  _id: string;
 };

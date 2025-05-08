@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import type { TripProps } from "../types/Trip";
+import type { SavedTrip } from "../types/Trip";
 import { getWeather } from "../utils/getWeather";
 import { getCoords } from "../utils/getCoords";
 
 const TripCard: React.FC<{
-  trip: TripProps;
+  trip: SavedTrip;
   onDelete?: (id: string) => void;
 }> = ({ trip, onDelete }) => {
   const formattedDate = new Date(trip.date).toLocaleDateString();
@@ -51,9 +51,7 @@ const TripCard: React.FC<{
           <strong>Weather:</strong> {weather.temp}°F, {weather.description}
         </p>
       )}
-      {onDelete && trip._id && (
-        <button onClick={() => onDelete(trip._id)}>Delete</button>
-      )}
+      {onDelete && <button onClick={() => onDelete(trip._id)}>Delete</button>}
     </div>
   );
 };
