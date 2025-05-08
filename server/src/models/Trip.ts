@@ -6,6 +6,11 @@ export interface ITrip extends Document {
   miles: number;
   date: string;
   userId: string;
+  weather?: {
+    description: string;
+    temp: number;
+    icon?: string;
+  };
 }
 
 const tripSchema = new Schema<ITrip>({

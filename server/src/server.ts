@@ -5,6 +5,7 @@ import cors from "cors";
 import tripRoutes from "./routes/tripRoutes";
 import authRoutes from "./routes/authRoutes";
 import statsRoutes from "./routes/statsRoutes";
+import reportRoutes from "./routes/reportRoutes";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/stats", reportRoutes);
 
 // Root route
 app.get("/", (_req, res) => {

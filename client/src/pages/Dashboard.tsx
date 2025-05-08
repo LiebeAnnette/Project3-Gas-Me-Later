@@ -158,6 +158,39 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
+      {totalMiles !== null && (
+        <div style={{ margin: "1rem 0", fontWeight: "bold" }}>
+          Total Miles Logged: {totalMiles}
+          <br />
+          <button
+            onClick={async () => {
+              const token = localStorage.getItem("token");
+              if (!token) return;
+
+              const res = await fetch(
+                "http://localhost:3001/api/stats/report",
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
+              if (!res.ok) {
+                alert("Failed to generate PDF");
+                return;
+              }
+
+              const blob = await res.blob();
+              const url = window.URL.createObjectURL(blob);
+              window.open(url, "_blank");
+            }}
+          >
+            📄 Open PDF Report
+          </button>
+        </div>
+      )}
+
       <TripForm onSubmit={addTrip} />
       <hr style={{ margin: "2rem 0" }} />
       <TripList trips={trips} onDelete={deleteTrip} />
