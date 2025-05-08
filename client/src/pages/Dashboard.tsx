@@ -152,11 +152,11 @@ const Dashboard: React.FC = () => {
         </>
       )}
 
-      {totalMiles !== null && (
+      {/* {totalMiles !== null && (
         <div style={{ margin: "1rem 0", fontWeight: "bold" }}>
           Total Miles Logged: {totalMiles}
         </div>
-      )}
+      )} */}
 
       {totalMiles !== null && (
         <div style={{ margin: "1rem 0", fontWeight: "bold" }}>
