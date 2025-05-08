@@ -3,6 +3,10 @@ export type TripProps = {
   endLocation: string;
   miles: number;
   date: string;
+  weather?: {
+    temp: number;
+    description: string;
+  };
   userId?: string;
   _id?: string;
 };

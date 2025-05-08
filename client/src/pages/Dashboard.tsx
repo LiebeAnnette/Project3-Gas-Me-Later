@@ -5,11 +5,22 @@ import TripList from "../components/TripList";
 import type { TripProps } from "../types/Trip";
 import { getUserFromToken } from "../utils/auth";
 import { useEffect } from "react";
+import { getChuckFact } from "../utils/getChuckFact";
 
 const Dashboard: React.FC = () => {
   const [trips, setTrips] = useState<TripProps[]>([]);
   const user = getUserFromToken();
   const navigate = useNavigate();
+  const [chuckFact, setChuckFact] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadFact = async () => {
+      const fact = await getChuckFact();
+      setChuckFact(fact);
+    };
+
+    loadFact();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -83,7 +94,33 @@ const Dashboard: React.FC = () => {
 
   return (
     <div style={{ padding: "2rem" }}>
+      {chuckFact && (
+        <div
+          style={{
+            background: "#ffe",
+            border: "1px solid #ccc",
+            padding: "1rem",
+            marginBottom: "2rem",
+            borderRadius: "6px",
+          }}
+        >
+          <p>
+            For no reason at all, here’s what <strong>Chuck Norris</strong> has
+            to say:
+          </p>
+          <p>{chuckFact}</p>
+          <button
+            onClick={async () => {
+              const newFact = await getChuckFact();
+              setChuckFact(newFact);
+            }}
+          >
+            Get New Fact
+          </button>
+        </div>
+      )}
       <h1>My Trips</h1>
+
       {user && (
         <>
           <p>Welcome back, {user.username}!</p>
