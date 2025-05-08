@@ -34,6 +34,8 @@ mongoose
   .connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/gas-me-later")
   .then(() => {
     console.log("MongoDB connected!");
+
+    // 🟢 Start the server AFTER setting up production static serving
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
@@ -41,16 +43,16 @@ mongoose
   .catch((err) => {
     console.error("MongoDB connection error:", err);
   });
-  
-  if (process.env.NODE_ENV === "production") {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-    const clientBuildPath = path.join(__dirname, "..", "..", "client", "dist");
-  
-    app.use(express.static(clientBuildPath));
-  
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(clientBuildPath, "index.html"));
-    });
-  }
-  
+
+// ✅ Move this block UP so it runs before the server starts
+if (process.env.NODE_ENV === "production") {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const clientBuildPath = path.join(__dirname, "..", "..", "client", "dist");
+
+  app.use(express.static(clientBuildPath));
+
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(clientBuildPath, "index.html"));
+  });
+}
