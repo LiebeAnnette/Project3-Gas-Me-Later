@@ -6,6 +6,7 @@ import type { TripProps } from "../types/Trip";
 import { getUserFromToken } from "../utils/auth";
 import { useEffect } from "react";
 import { getChuckFact } from "../utils/getChuckFact";
+import chuckImage from "../assets/Chungkingosaurus.jpg"; // adjust path as needed
 
 const Dashboard: React.FC = () => {
   const [trips, setTrips] = useState<TripProps[]>([]);
@@ -102,23 +103,34 @@ const Dashboard: React.FC = () => {
             padding: "1rem",
             marginBottom: "2rem",
             borderRadius: "6px",
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
           }}
         >
-          <p>
-            For no reason at all, here’s what <strong>Chuck Norris</strong> has
-            to say:
-          </p>
-          <p>{chuckFact}</p>
-          <button
-            onClick={async () => {
-              const newFact = await getChuckFact();
-              setChuckFact(newFact);
-            }}
-          >
-            Get New Fact
-          </button>
+          <div style={{ flex: 1 }}>
+            <p>
+              For no reason at all, here’s what <strong>Chuck Norris</strong>{" "}
+              has to say:
+            </p>
+            <p>{chuckFact}</p>
+            <button
+              onClick={async () => {
+                const newFact = await getChuckFact();
+                setChuckFact(newFact);
+              }}
+            >
+              Get New Fact
+            </button>
+          </div>
+          <img
+            src={chuckImage}
+            alt="Chuck Norris"
+            style={{ maxHeight: "120px", borderRadius: "6px" }}
+          />
         </div>
       )}
+
       <h1>My Trips</h1>
 
       {user && (
