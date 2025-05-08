@@ -15,6 +15,7 @@
     "@types/node": "^22.15.17",
     "@vitejs/plugin-react": "^4.4.1",
     "concurrently": "^9.1.2",
-    "cypress": "^14.3.3"
+    "cypress": "^14.3.3",
+    "vite": "^6.3.5"
   }
 }
