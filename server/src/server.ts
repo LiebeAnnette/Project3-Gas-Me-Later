@@ -45,14 +45,23 @@ mongoose
   });
 
 // ✅ Move this block UP so it runs before the server starts
-if (process.env.NODE_ENV === "production") {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const clientBuildPath = path.join(__dirname, "..", "..", "client", "dist");
+// if (process.env.NODE_ENV === "production") {
+//   const __filename = fileURLToPath(import.meta.url);
+//   const __dirname = path.dirname(__filename);
+//   const clientBuildPath = path.join(__dirname, "..", "..", "client", "dist");
 
-  app.use(express.static(clientBuildPath));
+//   app.use(express.static(clientBuildPath));
 
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(clientBuildPath, "index.html"));
-  });
-}
+//   app.get("*", (_req, res) => {
+//     res.sendFile(path.join(clientBuildPath, "index.html"));
+//   });
+// }
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientBuildPath = path.join(__dirname, "..", "..", "client", "dist");
+
+app.use(express.static(clientBuildPath));
+
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(clientBuildPath, "index.html"));
+});
