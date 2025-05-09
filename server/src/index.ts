@@ -8,49 +8,73 @@ import statsRoutes from "./routes/statsRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import { ApolloServer } from "apollo-server-express";
+import typeDefs from "./graphql/typeDefs.js";
+import resolvers from "./graphql/resolvers.js";
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+const startServer = async () => {
+  const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+  const PORT = process.env.PORT || 3001;
 
-// API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/trips", tripRoutes);
-app.use("/api/stats", statsRoutes);
-app.use("/api/stats", reportRoutes);
+  app.use(cors());
+  app.use(express.json());
 
-// Frontend static files (only in production)
-if (process.env.NODE_ENV === "production") {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const clientBuildPath = path.join(__dirname, "..", "..", "client", "dist");
+  // Mount REST API routes
+  app.use("/api/auth", authRoutes);
+  app.use("/api/trips", tripRoutes);
+  app.use("/api/stats", statsRoutes);
+  app.use("/api/stats", reportRoutes);
 
-  app.use(express.static(clientBuildPath));
-
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(clientBuildPath, "index.html"));
+  // Apollo Server setup
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: ({ req }) => {
+      // ✅ Optional: you can decode JWT here and pass user info to resolvers
+      return { req };
+    },
   });
-}
 
-// Root route (still useful for testing)
-app.get("/", (_req, res) => {
-  res.send("Gas Me Later Backend is running!");
-});
+  await server.start();
+  server.applyMiddleware({ app: app as any });
 
-// MongoDB and server startup
-mongoose
-  .connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/gas-me-later")
-  .then(() => {
-    console.log("MongoDB connected!");
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+  // Serve frontend in production
+  if (process.env.NODE_ENV === "production") {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const clientPath = path.join(__dirname, "..", "..", "client", "dist");
+
+    app.use(express.static(clientPath));
+    app.get("*", (_req, res) =>
+      res.sendFile(path.join(clientPath, "index.html"))
+    );
+  }
+
+  // Default route
+  app.get("/", (_req, res) => {
+    res.send("Gas Me Later Backend is running!");
+  });
+
+  // Connect to MongoDB and start server
+  mongoose
+    .connect(
+      process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/gas-me-later"
+    )
+    .then(() => {
+      console.log("MongoDB connected!");
+      app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+        console.log(
+          `GraphQL running at http://localhost:${PORT}${server.graphqlPath}`
+        );
+      });
+    })
+    .catch((err) => {
+      console.error("MongoDB connection error:", err);
     });
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
+};
+
+startServer();
