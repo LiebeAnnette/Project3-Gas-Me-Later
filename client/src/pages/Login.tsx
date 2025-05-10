@@ -29,7 +29,7 @@ const Login: React.FC = () => {
         throw new Error(data.error || "Login failed");
       }
 
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("id_token", data.token);
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message);
