@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import { ApolloServer } from "apollo-server-express";
 import typeDefs from "./graphql/typeDefs.js";
 import resolvers from "./graphql/resolvers.js";
+import { InMemoryLRUCache } from "@apollo/utils.keyvaluecache";
 
 dotenv.config();
 
@@ -32,14 +33,13 @@ const startServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req }: { req: express.Request | undefined }) => {
-      if (!req) {
-        throw new Error("Request object is missing from context");
-      }
+    context: ({ req }) => {
+      if (!req) throw new Error("Request object is missing from context");
       return { req };
     },
+    cache: new InMemoryLRUCache(), // ✅ sets a bounded cache
+    persistedQueries: false, // ✅ disables persisted queries
   });
-
   await server.start();
   server.applyMiddleware({ app: app as any });
 
