@@ -32,7 +32,10 @@ const startServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req }: { req: express.Request }) => {
+    context: ({ req }: { req: express.Request | undefined }) => {
+      if (!req) {
+        throw new Error("Request object is missing from context");
+      }
       return { req };
     },
   });
