@@ -31,8 +31,14 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     );
 
     res.status(201).json({ token });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+
+    // Handle duplicate key error from MongoDB
+    if (error.code === 11000) {
+      res.status(400).json({ error: "Username or email already exists" });
+      return;
+    }
     res.status(500).json({ error: "Failed to register user" });
   }
 });
