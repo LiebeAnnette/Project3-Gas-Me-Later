@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 
 import TripForm from "../components/TripForm";
 import TripList from "../components/TripList";
@@ -8,7 +8,11 @@ import { getUserFromToken } from "../utils/auth";
 import { getChuckFact } from "../utils/getChuckFact";
 import chuckImage from "../assets/Chungkingosaurus.jpg";
 
-import { GET_TRIPS, GET_TOTAL_MILES } from "../graphql/queries";
+import {
+  GET_TRIPS,
+  GET_TOTAL_MILES,
+  GENERATE_REPORT,
+} from "../graphql/queries";
 import { ADD_TRIP, DELETE_TRIP } from "../graphql/mutations";
 import type { NewTrip, SavedTrip } from "../types/Trip";
 
@@ -20,10 +24,11 @@ const Dashboard: React.FC = () => {
   const [trips, setTrips] = useState<SavedTrip[]>([]);
   const [totalMiles, setTotalMiles] = useState<number | null>(null);
 
-  const { data: tripData, refetch: refetchTrips } = useQuery(GET_TRIPS);
+  const { data: tripData } = useQuery(GET_TRIPS);
   const { data: milesData, refetch: refetchMiles } = useQuery(GET_TOTAL_MILES);
   const [addTripMutation] = useMutation(ADD_TRIP);
   const [deleteTripMutation] = useMutation(DELETE_TRIP);
+  const [fetchReport] = useLazyQuery(GENERATE_REPORT);
 
   useEffect(() => {
     if (tripData?.getTrips) setTrips(tripData.getTrips);
@@ -64,6 +69,26 @@ const Dashboard: React.FC = () => {
       }
     } catch (err) {
       console.error("Error deleting trip:", err);
+    }
+  };
+
+  const handleGeneratePDF = async () => {
+    try {
+      const { data } = await fetchReport();
+      if (!data?.generateReport) {
+        alert("Failed to get PDF");
+        return;
+      }
+
+      const pdfBlob = new Blob(
+        [Uint8Array.from(atob(data.generateReport), (c) => c.charCodeAt(0))],
+        { type: "application/pdf" }
+      );
+
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error("PDF generation error:", err);
     }
   };
 
@@ -117,6 +142,8 @@ const Dashboard: React.FC = () => {
       {totalMiles !== null && (
         <div style={{ margin: "1rem 0", fontWeight: "bold" }}>
           Total Miles Logged: {totalMiles}
+          <br />
+          <button onClick={handleGeneratePDF}>📄 Open PDF Report</button>
         </div>
       )}
 
