@@ -3,6 +3,7 @@ type ResolverContext = any; // Replace with proper context type later
 import Trip from "../models/Trip.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 dotenv.config();
 
 interface JwtPayload {
@@ -49,6 +50,63 @@ const resolvers = {
       } catch (err) {
         console.error("Error calculating total miles:", err);
         throw new Error("Failed to get total miles");
+      }
+    },
+    generateReport: async (_parent: unknown, _args: unknown, context: any) => {
+      try {
+        const token = context.req.headers.authorization?.split(" ")[1];
+        if (!token) throw new Error("Unauthorized");
+
+        const decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET!
+        ) as JwtPayload;
+        const userId = decoded.data.id;
+
+        const trips = await Trip.find({ userId });
+        const totalMiles = trips.reduce((sum, trip) => sum + trip.miles, 0);
+
+        const pdfDoc = await PDFDocument.create();
+        const page = pdfDoc.addPage();
+        const { width, height } = page.getSize();
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+        page.drawText("Gas Me Later Report", {
+          x: 50,
+          y: height - 50,
+          size: 20,
+          font,
+          color: rgb(0, 0, 0),
+        });
+
+        let y = height - 80;
+        trips.forEach((trip, index) => {
+          const text = `${index + 1}. ${trip.startLocation} to ${
+            trip.endLocation
+          }, ${trip.miles} miles`;
+          page.drawText(text, {
+            x: 50,
+            y: y,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+          });
+          y -= 20;
+        });
+
+        page.drawText(`Total Miles: ${totalMiles}`, {
+          x: 50,
+          y: y - 20,
+          size: 14,
+          font,
+          color: rgb(0, 0, 1),
+        });
+
+        const pdfBytes = await pdfDoc.save();
+        return Buffer.from(pdfBytes).toString("base64");
+      } catch (err) {
+        console.error("Error generating PDF report:", err);
+        throw new Error("Failed to generate report");
       }
     },
   },

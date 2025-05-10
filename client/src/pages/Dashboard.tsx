@@ -1,159 +1,130 @@
-// server/src/graphql/resolvers.ts
-import Trip from "../models/Trip.js";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-dotenv.config();
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation } from "@apollo/client";
 
-interface JwtPayload {
-  data: {
-    id: string;
+import TripForm from "../components/TripForm";
+import TripList from "../components/TripList";
+import { getUserFromToken } from "../utils/auth";
+import { getChuckFact } from "../utils/getChuckFact";
+import chuckImage from "../assets/Chungkingosaurus.jpg";
+
+import { GET_TRIPS, GET_TOTAL_MILES } from "../graphql/queries";
+import { ADD_TRIP, DELETE_TRIP } from "../graphql/mutations";
+import type { NewTrip, SavedTrip } from "../types/Trip";
+
+const Dashboard: React.FC = () => {
+  const user = getUserFromToken();
+  const navigate = useNavigate();
+
+  const [chuckFact, setChuckFact] = useState<string | null>(null);
+  const [trips, setTrips] = useState<SavedTrip[]>([]);
+  const [totalMiles, setTotalMiles] = useState<number | null>(null);
+
+  const { data: tripData, refetch: refetchTrips } = useQuery(GET_TRIPS);
+  const { data: milesData, refetch: refetchMiles } = useQuery(GET_TOTAL_MILES);
+  const [addTripMutation] = useMutation(ADD_TRIP);
+  const [deleteTripMutation] = useMutation(DELETE_TRIP);
+
+  useEffect(() => {
+    if (tripData?.getTrips) setTrips(tripData.getTrips);
+    if (milesData?.getTotalMiles) setTotalMiles(milesData.getTotalMiles);
+  }, [tripData, milesData]);
+
+  useEffect(() => {
+    const loadFact = async () => {
+      const fact = await getChuckFact();
+      setChuckFact(fact);
+    };
+    loadFact();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
   };
-}
 
-const resolvers = {
-  Query: {
-    getTrips: async (_parent: unknown, _args: unknown, context: any) => {
-      try {
-        const token = context.req.headers.authorization?.split(" ")[1];
-        if (!token) throw new Error("Unauthorized");
-
-        const decoded = jwt.verify(
-          token,
-          process.env.JWT_SECRET!
-        ) as JwtPayload;
-        const userId = decoded.data.id;
-
-        const trips = await Trip.find({ userId });
-        return trips;
-      } catch (err) {
-        console.error("Error fetching trips:", err);
-        throw new Error("Failed to get trips");
+  const addTrip = async (newTrip: NewTrip) => {
+    try {
+      const { data } = await addTripMutation({ variables: newTrip });
+      if (data?.addTrip) {
+        setTrips((prev) => [...prev, data.addTrip]);
+        await refetchMiles();
       }
-    },
-    getTotalMiles: async (_parent: unknown, _args: unknown, context: any) => {
-      try {
-        const token = context.req.headers.authorization?.split(" ")[1];
-        if (!token) throw new Error("Unauthorized");
+    } catch (err) {
+      console.error("Error adding trip:", err);
+    }
+  };
 
-        const decoded = jwt.verify(
-          token,
-          process.env.JWT_SECRET!
-        ) as JwtPayload;
-        const userId = decoded.data.id;
-
-        const trips = await Trip.find({ userId });
-        const totalMiles = trips.reduce((sum, trip) => sum + trip.miles, 0);
-
-        return totalMiles;
-      } catch (err) {
-        console.error("Error calculating total miles:", err);
-        throw new Error("Failed to get total miles");
+  const deleteTrip = async (id: string) => {
+    try {
+      const { data } = await deleteTripMutation({ variables: { id } });
+      if (data?.deleteTrip) {
+        setTrips((prev) => prev.filter((trip) => trip._id !== id));
+        await refetchMiles();
       }
-    },
-    generateReport: async (_parent: unknown, _args: unknown, context: any) => {
-      try {
-        const token = context.req.headers.authorization?.split(" ")[1];
-        if (!token) throw new Error("Unauthorized");
+    } catch (err) {
+      console.error("Error deleting trip:", err);
+    }
+  };
 
-        const decoded = jwt.verify(
-          token,
-          process.env.JWT_SECRET!
-        ) as JwtPayload;
-        const userId = decoded.data.id;
+  return (
+    <div style={{ padding: "2rem" }}>
+      {chuckFact && (
+        <div
+          style={{
+            background: "#ffe",
+            border: "1px solid #ccc",
+            padding: "1rem",
+            marginBottom: "2rem",
+            borderRadius: "6px",
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <p>
+              For no reason at all, here’s what <strong>Chuck Norris</strong>{" "}
+              has to say:
+            </p>
+            <p>{chuckFact}</p>
+            <button
+              onClick={async () => {
+                const newFact = await getChuckFact();
+                setChuckFact(newFact);
+              }}
+            >
+              Get New Fact
+            </button>
+          </div>
+          <img
+            src={chuckImage}
+            alt="Chuck Norris"
+            style={{ maxHeight: "120px", borderRadius: "6px" }}
+          />
+        </div>
+      )}
 
-        const trips = await Trip.find({ userId });
-        const totalMiles = trips.reduce((sum, trip) => sum + trip.miles, 0);
+      <h1>My Trips</h1>
 
-        const pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage();
-        const { width, height } = page.getSize();
-        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      {user && (
+        <>
+          <p>Welcome back, {user.username}!</p>
+          <button onClick={handleLogout}>Log out</button>
+        </>
+      )}
 
-        page.drawText("Gas Me Later Report", {
-          x: 50,
-          y: height - 50,
-          size: 20,
-          font,
-          color: rgb(0, 0, 0),
-        });
+      {totalMiles !== null && (
+        <div style={{ margin: "1rem 0", fontWeight: "bold" }}>
+          Total Miles Logged: {totalMiles}
+        </div>
+      )}
 
-        let y = height - 80;
-        trips.forEach((trip, index) => {
-          const text = `${index + 1}. ${trip.startLocation} to ${
-            trip.endLocation
-          }, ${trip.miles} miles`;
-          page.drawText(text, {
-            x: 50,
-            y: y,
-            size: 12,
-            font,
-            color: rgb(0, 0, 0),
-          });
-          y -= 20;
-        });
-
-        page.drawText(`Total Miles: ${totalMiles}`, {
-          x: 50,
-          y: y - 20,
-          size: 14,
-          font,
-          color: rgb(0, 0, 1),
-        });
-
-        const pdfBytes = await pdfDoc.save();
-        return Buffer.from(pdfBytes).toString("base64");
-      } catch (err) {
-        console.error("Error generating PDF report:", err);
-        throw new Error("Failed to generate report");
-      }
-    },
-  },
-  Mutation: {
-    addTrip: async (_parent: unknown, args: any, context: any) => {
-      try {
-        const token = context.req.headers.authorization?.split(" ")[1];
-        if (!token) throw new Error("Unauthorized");
-
-        const decoded = jwt.verify(
-          token,
-          process.env.JWT_SECRET!
-        ) as JwtPayload;
-        const userId = decoded.data.id;
-
-        const newTrip = await Trip.create({ ...args, userId });
-        return newTrip;
-      } catch (err) {
-        console.error("Error adding trip:", err);
-        throw new Error("Failed to add trip");
-      }
-    },
-    deleteTrip: async (
-      _parent: unknown,
-      { id }: { id: string },
-      context: any
-    ) => {
-      try {
-        const token = context.req.headers.authorization?.split(" ")[1];
-        if (!token) throw new Error("Unauthorized");
-
-        const decoded = jwt.verify(
-          token,
-          process.env.JWT_SECRET!
-        ) as JwtPayload;
-        const userId = decoded.data.id;
-
-        const trip = await Trip.findOne({ _id: id, userId });
-        if (!trip) throw new Error("Trip not found or not authorized");
-
-        await Trip.findByIdAndDelete(id);
-        return true;
-      } catch (err) {
-        console.error("Error deleting trip:", err);
-        throw new Error("Failed to delete trip");
-      }
-    },
-  },
+      <TripForm onSubmit={addTrip} />
+      <hr style={{ margin: "2rem 0" }} />
+      <TripList trips={trips} onDelete={deleteTrip} />
+    </div>
+  );
 };
 
-export default resolvers;
+export default Dashboard;
