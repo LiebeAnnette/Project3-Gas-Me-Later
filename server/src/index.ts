@@ -12,6 +12,7 @@ import { ApolloServer } from "apollo-server-express";
 import typeDefs from "./graphql/typeDefs.js";
 import resolvers from "./graphql/resolvers.js";
 import { InMemoryLRUCache } from "@apollo/utils.keyvaluecache";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -34,8 +35,21 @@ const startServer = async () => {
     typeDefs,
     resolvers,
     context: ({ req }) => {
-      if (!req) throw new Error("Request object is missing from context");
-      return { req };
+      const token = req.headers.authorization?.split(" ")[1];
+      if (!token) {
+        return {};
+      }
+
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+          userId: string;
+          username: string;
+        };
+        return { user: decoded };
+      } catch (err) {
+        console.error("❌ Token verification failed in Apollo context:", err);
+        return {};
+      }
     },
     cache: new InMemoryLRUCache(), // ✅ sets a bounded cache
     persistedQueries: false, // ✅ disables persisted queries
