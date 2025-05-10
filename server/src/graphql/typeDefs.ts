@@ -19,6 +19,7 @@ const typeDefs = gql`
 
   type Query {
     getTrips: [Trip!]!
+    getTotalMiles: Int!
     generateReport: String!
   }
 
