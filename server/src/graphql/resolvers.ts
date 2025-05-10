@@ -124,8 +124,8 @@ const resolvers = {
 
         const newTrip = await Trip.create({ ...args, userId });
         return newTrip;
-      } catch (err) {
-        console.error("Error adding trip:", err);
+      } catch (err: any) {
+        console.error("Error adding trip:", err.message, err.stack);
         throw new Error("Failed to add trip");
       }
     },
