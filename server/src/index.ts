@@ -32,8 +32,7 @@ const startServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req }) => {
-      // ✅ Optional: you can decode JWT here and pass user info to resolvers
+    context: ({ req }: { req: express.Request }) => {
       return { req };
     },
   });
